@@ -8,6 +8,8 @@ it is possible to hide data in a base 64 text, by using the padding.
 Therefore, you won't loose any information about your support text, as far as the 
 hidden data will be put in the "free bits" gained by padding.
 
+This technique is also known under the name of "paddinganography".
+
 Any contribution, such as implementing the base 32 steganography tool using the same
 principle, is welcome :)
 
