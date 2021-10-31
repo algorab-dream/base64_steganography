@@ -94,7 +94,7 @@ if not (args.decode):
     bitsStegProcess = list(bitsSteg)
 
     if args.verbose:
-        print('[*] Hiding text (this step might be long)...')
+        print('[*] Hidding text...')
 
     size = len(bitsTextProcess)//24
     length = 24*size+8
@@ -123,7 +123,7 @@ if not (args.decode):
             base64Parts = []
             bitsTextProcess = list(bitsText)
             bitsStegProcess = list(bitsSteg)
-            size -= 1
+            size = size//2
             length = 24*size+8
 
     print('[+] Text hidden.')
