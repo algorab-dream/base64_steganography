@@ -3,6 +3,15 @@ import sys
 import codecs
 import argparse
 
+banner = """
+┏━━┓┏━━━┳━━━┳━━━┳━━━┳┓╋┏┓┏━━━┳━━━━┳━━━┳━━━┳━━━┳━┓╋┏┳━━━┓
+┃┏┓┃┃┏━┓┃┏━┓┃┏━━┫┏━━┫┃╋┃┃┃┏━┓┃┏┓┏┓┃┏━━┫┏━┓┃┏━┓┃┃┗┓┃┃┏━┓┃
+┃┗┛┗┫┃╋┃┃┗━━┫┗━━┫┗━━┫┗━┛┃┃┗━━╋┛┃┃┗┫┗━━┫┃╋┗┫┃╋┃┃┏┓┗┛┃┃╋┃┃ 
+┃┏━┓┃┗━┛┣━━┓┃┏━━┫┏━┓┣━━┓┃┗━━┓┃╋┃┃╋┃┏━━┫┃┏━┫┗━┛┃┃┗┓┃┃┃╋┃┃
+┃┗━┛┃┏━┓┃┗━┛┃┗━━┫┗━┛┃╋╋┃┃┃┗━┛┃╋┃┃╋┃┗━━┫┗┻━┃┏━┓┃┃╋┃┃┃┗━┛┃
+┗━━━┻┛╋┗┻━━━┻━━━┻━━━┛╋╋┗┛┗━━━┛╋┗┛╋┗━━━┻━━━┻┛╋┗┻┛╋┗━┻━━━┛
+"""
+
 alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
 parser = argparse.ArgumentParser()
@@ -14,6 +23,8 @@ parser.add_argument('-o', '--output', help="Output address of the encoded text",
 parser.add_argument('-d', "--decode", help="Extract hidden text from a base64 file (--text)", action="store_true")
 
 args = parser.parse_args()
+
+print(banner)
 
 if not (args.decode):
 
