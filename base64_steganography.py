@@ -198,6 +198,10 @@ if not (args.decode):
 
 else:
 
+    if (args.text == None):
+        print("[-] Text file must be specified.")
+        sys.exit(1)
+
     if args.verbose:
         print('[*] Opening files...')
 
