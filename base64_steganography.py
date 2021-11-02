@@ -17,19 +17,19 @@ alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 parser = argparse.ArgumentParser()
 
 parser.add_argument('-v', "--verbose", help="Verbose mode", action="store_true")
-parser.add_argument('-s', '--support', help="Support text that will be encoded", default=None, type=str)
-parser.add_argument('-t', '--text', help="Text to be hidden", default=None, type=str)
-parser.add_argument('-o', '--output', help="Output address of the encoded text", default=None, type=str)
-parser.add_argument('-d', "--decode", help="Extract hidden text from a base64 file (--text)", action="store_true")
-
+parser.add_argument('-s', '--support', help="Support file that will be encoded", default=None, type=str)
+parser.add_argument('-d', '--data', help="Data to be hidden", default=None, type=str)
+parser.add_argument('-o', '--output', help="Output address of the encoded file", default=None, type=str)
+parser.add_argument("--decode", help="Extract hidden text from a base64 file (--text)", action="store_true")
+parser.add_argument("--include", help="Do not crop the last line of the base64 file (only if used while hidding data)", action="store_true")
 args = parser.parse_args()
 
 print(banner)
 
 if not (args.decode):
 
-    if ((args.text == None) or (args.support == None)):
-        print("[-] Text and support files must be specified.")
+    if ((args.data == None) or (args.support == None)):
+        print("[-] Data and support files must be specified.")
         sys.exit(1)
 
     if args.verbose:
@@ -39,20 +39,20 @@ if not (args.decode):
         print("[-] Error : Following file does not exist : " + args.support)
         sys.exit(1)
 
-    if not (os.path.exists(args.text)):
-        print("[-] Error : Following file does not exist : " + args.text)
+    if not (os.path.exists(args.data)):
+        print("[-] Error : Following file does not exist : " + args.data)
         sys.exit(1)
 
     try:
-        txtSupport = open(args.support, "r")
+        txtSupport = open(args.support, "rb")
     except:
         print("[-] Error while opening file : " + args.support)
         sys.exit(1)
 
     try:   
-        txtSteg = open(args.text, "r")
+        txtSteg = open(args.data, "rb")
     except:
-        print("[-] Error while opening file : " + args.text)
+        print("[-] Error while opening file : " + args.data)
         sys.exit(1)
 
     bitsTextList = []
@@ -61,12 +61,13 @@ if not (args.decode):
     bitsSteg= ''
 
     if args.verbose:
-        print('[*] Converting texts to bits...')
+        print('[*] Converting data to bits...')
 
     line = txtSteg.readline()
 
     while line:
-        bitsStegList.append(bin(int((line.encode('ascii')).hex(), 16))[2:].zfill(8*len(line)))
+        for i in range(len(line)):
+            bitsStegList.append(bin(int(line[i]))[2:].zfill(8))
         line = txtSteg.readline()
 
     txtSteg.close()
@@ -76,7 +77,8 @@ if not (args.decode):
     line = txtSupport.readline()
 
     while line:
-        bitsTextList.append(bin(int((line.encode('ascii')).hex(), 16))[2:].zfill(8*len(line)))
+        for i in range(len(line)):
+            bitsTextList.append(bin(int(line[i]))[2:].zfill(8))
         line = txtSupport.readline()
 
     txtSupport.close()
@@ -84,7 +86,7 @@ if not (args.decode):
     bitsText = ''.join(bitsTextList)
 
     if (len(bitsText)/2 <= len(bitsSteg)):
-        print("[-] Text too long for this support.")
+        print("[-] Data too long for this support.")
         sys.exit(1)
 
     base64Parts = []
@@ -94,42 +96,32 @@ if not (args.decode):
     bitsStegProcess = list(bitsSteg)
 
     if args.verbose:
-        print('[*] Hidding text...')
-
-    size = len(bitsTextProcess)//24
-    length = 24*size+8
+        print('[*] Hidding data...')
 
     while (len(bitsStegProcess) != 0):
-        try:
-            if (len(bitsStegProcess)%4==0):
-                base64slice = ["=="]
-                for i in range(length):
-                    base64slice.append(bitsTextProcess[0])
-                    bitsTextProcess = bitsTextProcess[1:]
-                for bit in (bitsStegProcess[:4]):
-                    base64slice.append(bit)
-                bitsStegProcess = bitsStegProcess[4:] 
-                base64Parts.append(base64slice)
-            else:
-                base64slice = ["="]
-                for i in range(length+8):
-                    base64slice.append(bitsTextProcess[0])
-                    bitsTextProcess = bitsTextProcess[1:]
-                for bit in (bitsStegProcess[:2]):
-                    base64slice.append(bit)
-                bitsStegProcess = bitsStegProcess[2:]
-                base64Parts.append(base64slice)
-        except:
-            base64Parts = []
-            bitsTextProcess = list(bitsText)
-            bitsStegProcess = list(bitsSteg)
-            size = size//2
-            length = 24*size+8
+        if (len(bitsStegProcess)%4==0):
+            base64slice = ["=="]
+            for i in range(8):
+                base64slice.append(bitsTextProcess[0])
+                bitsTextProcess = bitsTextProcess[1:]
+            for bit in (bitsStegProcess[:4]):
+                base64slice.append(bit)
+            bitsStegProcess = bitsStegProcess[4:] 
+            base64Parts.append(base64slice)
+        else:
+            base64slice = ["="]
+            for i in range(16):
+                base64slice.append(bitsTextProcess[0])
+                bitsTextProcess = bitsTextProcess[1:]
+            for bit in (bitsStegProcess[:2]):
+                base64slice.append(bit)
+            bitsStegProcess = bitsStegProcess[2:]
+            base64Parts.append(base64slice)
 
-    print('[+] Text hidden.')
+    print('[+] Data hidden.')
 
     if args.verbose:
-        print('[*] Converting the end of support text...')
+        print('[*] Converting the end of support file...')
 
     if (len(bitsTextProcess)%6==0):
         base64slice=[]
@@ -198,23 +190,24 @@ if not (args.decode):
 
 else:
 
-    if (args.text == None):
-        print("[-] Text file must be specified.")
+    if (args.data == None):
+        print("[-] Data file must be specified.")
         sys.exit(1)
 
     if args.verbose:
         print('[*] Opening files...')
 
-    if not (os.path.exists(args.text)):
-        print("[-] Error : Following file does not exist : " + args.text)
+    if not (os.path.exists(args.data)):
+        print("[-] Error : Following file does not exist : " + args.data)
         sys.exit(1)
 
     try:   
-        text = open(args.text, "r")
+        text = open(args.data, "r")
     except:
-        print("[-] Error while opening file : " + args.text)
+        print("[-] Error while opening file : " + args.data)
         sys.exit(1)
 
+    
     line = text.readline()
     bitLines = []
     bits = ''
@@ -233,8 +226,17 @@ else:
                     if alphabet[k] == line[i]:
                         bitText.append(bin(k)[2:].zfill(6))
             bitLines.append(bitText)
+        else:
+            for i in range(len(line)):
+                for k in range(len(alphabet)):
+                    if alphabet[k] == line[i]:
+                        bitText.append(bin(k)[2:].zfill(6))
+            bitLines.append(bitText)
         line = text.readline()
     text.close()
+
+    if not args.include:
+        bitLines=bitLines[:-1]
 
     if args.verbose:
         print('[*] Extracting data...')
@@ -245,7 +247,7 @@ else:
         if pad == '==':
             for bit in lastchar[-4:]:
                 bits += bit
-        else:
+        elif pad == '=':
             for bit in lastchar[-2:]:
                 bits += bit
     
@@ -256,23 +258,27 @@ else:
 
     try:
         plainText = codecs.decode(hex(int(bits, 2))[2:], 'hex').decode('ascii')
+        plain = True
     except:
-        bits = bits[:-2]
         try:
-            plainText = codecs.decode(hex(int(bits, 2))[2:], 'hex').decode('ascii')
+            print("[-] Error while converting bits to ASCII string.\n[*] Extracting raw bytes...")
+            split_bits = [bits[index : index + 8] for index in range(0, len(bits), 8)]
+            bytesString = b''
+            for bitString in split_bits:
+                bytesString += int(bitString, 2).to_bytes(1, byteorder='big')
+            plain = False
         except:
-            bits = bits[:-2]
-            try:
-                plainText = codecs.decode(hex(int(bits, 2))[2:], 'hex').decode('ascii')
-            except:
-                print("[-] Error while converting bits to ASCII string.")
-                sys.exit(1)
+            print("[-] Error while extracting raw bytes.")
+            sys.exit(1)
 
     if (args.output != None):
         if args.verbose:
             print('[*] Writing extracted text at ' + args.output + '...')
         try:
-            open(args.output,'w').write(plainText)
+            if plain:
+                open(args.output,'w').write(plainText)
+            else:
+                open(args.output,'wb').write(bytesString)
             print("[+] Encoded string written at : " + args.output)
         except:
             print("[-] Error while creating ouput file.")
