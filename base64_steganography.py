@@ -63,6 +63,7 @@ if not (args.decode):
     if args.verbose:
         print('[*] Converting data to bits...')
 
+
     line = txtSteg.readline()
 
     while line:
@@ -91,32 +92,31 @@ if not (args.decode):
 
     base64Parts = []
 
-    bitsTextProcess = list(bitsText)
+    bitsTextProcess = bitsText
 
-    bitsStegProcess = list(bitsSteg)
+    bitsStegProcess = bitsSteg
 
     if args.verbose:
         print('[*] Hidding data...')
+    
+    max_len = len(bitsStegProcess)
 
     while (len(bitsStegProcess) != 0):
         if (len(bitsStegProcess)%4==0):
             base64slice = ["=="]
-            for i in range(8):
-                base64slice.append(bitsTextProcess[0])
-                bitsTextProcess = bitsTextProcess[1:]
-            for bit in (bitsStegProcess[:4]):
-                base64slice.append(bit)
+            base64slice.append(bitsTextProcess[:8])
+            bitsTextProcess = bitsTextProcess[8:]
+            base64slice.append(bitsStegProcess[:4])
             bitsStegProcess = bitsStegProcess[4:] 
             base64Parts.append(base64slice)
         else:
             base64slice = ["="]
-            for i in range(16):
-                base64slice.append(bitsTextProcess[0])
-                bitsTextProcess = bitsTextProcess[1:]
-            for bit in (bitsStegProcess[:2]):
-                base64slice.append(bit)
+            base64slice.append(bitsTextProcess[:16])
+            bitsTextProcess = bitsTextProcess[16:]
+            base64slice.append(bitsStegProcess[:2])
             bitsStegProcess = bitsStegProcess[2:]
             base64Parts.append(base64slice)
+        print(f'[*] {100*abs((len(bitsStegProcess)-max_len)/max_len):.2f}%',end='\r')
 
     print('[+] Data hidden.')
 
@@ -124,58 +124,48 @@ if not (args.decode):
         print('[*] Converting the end of support file...')
 
     if (len(bitsTextProcess)%6==0):
-        base64slice=[]
-        for bit in bitsTextProcess:
-            base64slice.append(bit)
+        base64slice=bitsTextProcess
         base64Parts.append(base64slice)
     elif(len(bitsTextProcess)%6==2):
         base64slice=["=="]
-        for bit in bitsTextProcess:
-            base64slice.append(bit)
-        for i in range(4):
-            base64slice.append('0')
+        base64slice.append(bitsTextProcess+'0000')
         base64Parts.append(base64slice)
     else:
         base64slice=["="]
-        for bit in bitsTextProcess:
-            base64slice.append(bit)
-        for i in range(2):
-            base64slice.append('0')
+        base64slice.append(bitsTextProcess+'00')
         base64Parts.append(base64slice)
 
     if args.verbose:
-        print('[*] Converting bits to ASCII strings...')
+        print('[*] Converting bits to ASCII string...')
 
-    base64lines = []
+    base64lines = ''
 
-    for bitLine in base64Parts:
-        line = []
-        bitLineProcess = bitLine
+    max_len = len(base64Parts)
+    for i in range(len(base64Parts)):
+        line = ''
+        bitLineProcess = base64Parts[i]
         end = None
         if (bitLineProcess[0] != '0') and (bitLineProcess[0] != '1'):
             end = bitLineProcess[0]
-            bitLineProcess = bitLineProcess[1:]
+            bitLineProcess = ''.join(bitLineProcess[1:])
         while(len(bitLineProcess) != 0):
-            char = ''
-            for i in range(6):
-                char += bitLineProcess[0]
-                bitLineProcess = bitLineProcess[1:]
-            line.append(alphabet[int(char, 2)])
+            char = bitLineProcess[:6]
+            bitLineProcess = bitLineProcess[6:]
+            line += alphabet[int(char, 2)]
         if (end != None):
-            line.append(end)
-        base64lines.append(line)
+            line += end
+        base64lines += line+'\n'
+        print(f'[*] {100*abs((i)/max_len):.2f}%',end='\r')
 
     if args.verbose:
-        print('[+] Build.')
+        print('[+] ASCII string build.')
 
     if (args.output != None):
         if args.verbose:
             print('[*] Writing base64 text at ' + args.output + '...')
         try:
             output = open(args.output,'w')
-            for line in base64lines:
-                output.write(''.join(line))
-                output.write('\n')
+            output.write(base64lines)
             output.close()
             print("[+] Encoded string written at : " + args.output)
         except:
@@ -184,8 +174,7 @@ if not (args.decode):
         sys.exit()
     else:
         print("[+] Encoded string : ")
-        for line in base64lines:
-            print(''.join(line))
+        print(''.join(base64lines))
         sys.exit()
 
 else:
