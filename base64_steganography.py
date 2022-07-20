@@ -20,7 +20,7 @@ parser.add_argument('-v', "--verbose", help="Verbose mode", action="store_true")
 parser.add_argument('-s', '--support', help="Support file that will be encoded", default=None, type=str)
 parser.add_argument('-d', '--data', help="Data to be hidden", default=None, type=str)
 parser.add_argument('-o', '--output', help="Output address of the encoded file", default=None, type=str)
-parser.add_argument("--decode", help="Extract hidden text from a base64 file (--text)", action="store_true")
+parser.add_argument("--decode", help="Extract hidden text from a base64 file", action="store_true")
 parser.add_argument("--include", help="Do not crop the last line of the base64 file (only if used while hidding data)", action="store_true")
 args = parser.parse_args()
 
@@ -286,5 +286,8 @@ else:
         sys.exit()
     else:
         print("[+] Extracted text : ")
-        print(plainText)
+        try:
+            print(plainText)
+        except:
+            print(bytesString)
         sys.exit()
